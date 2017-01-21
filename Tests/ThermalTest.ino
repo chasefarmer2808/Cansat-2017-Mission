@@ -44,7 +44,7 @@ void loop() {
   float bottomTemp = getCelcius(tmp2);
 
   setSideLEDS(sideTemp);
-  setBottomLEDS(bottemTemp);  
+  setBottomLEDS(bottomTemp);  
 }
 
 float getCelcius(int sensorAddr) {
