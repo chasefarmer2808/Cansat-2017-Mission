@@ -1,8 +1,5 @@
 #include "Container.h"
 #include "Arduino.h"
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BMP085_U.h>
 
 Container::Container() {  //constructor implementation
 	bmp = Adafruit_BMP085_Unified(10085);
