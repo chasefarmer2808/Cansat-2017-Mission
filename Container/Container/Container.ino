@@ -12,17 +12,18 @@ float temp;
 
 void setup() {
 	Serial.begin(9600);
+	analogReference(DEFAULT);  //reference range 0V - 5V
 	if (!c.bmp.begin()) {
 		Serial.print("here");
 	}
 }
 
 // the loop function runs over and over again until power down or reset
-void loop() {
+void loop() { 
 	c.setBMP180Data();
+	c.setLux();
 	Serial.println(c.temperature);
 	Serial.println(c.pressure);
-	Serial.println(c.altitude);
-	Serial.println();
+	Serial.println(c.lux);
 	delay(1000);
 }
