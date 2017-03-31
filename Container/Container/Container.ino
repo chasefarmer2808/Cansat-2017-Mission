@@ -14,16 +14,17 @@ Container c = Container();
 
 volatile char command;  //global command variable
 
-SoftwareSerial xbee(2, 3);
+SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
 void setup() {
 	Serial.begin(9600);
-	xbee.begin(9600);
+	xbee.begin(9600);  //start the software serial port
 	
 	analogReference(DEFAULT);  //reference range 0V - 5V
-	Serial.println("init");
+
 	if (!c.bmp.begin()) {
-		Serial.print("here");
+		Serial.print("BMP failed");
+		while (1);
 	}
 
 	if (!c.rtc.begin()) {
@@ -32,13 +33,12 @@ void setup() {
 	}
 
 	if (c.rtc.lostPower()) {
-		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  //initialize the time
 	}
 
-	pinMode(c.battPin, INPUT);
-	pinMode(c.releasePin, OUTPUT);
-	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);
-	
+	pinMode(c.battPin, INPUT);  //set the voltage input
+	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
+	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
 }
 
 // the loop function runs over and over again until power down or reset
@@ -49,10 +49,11 @@ void loop() {
 	c.setVoltage();
 	Serial.println(c.temperature);
 	Serial.println(c.pressure);
-	Serial.println(c.lux);
+	Serial.println(c.lux); 
 	Serial.println(c.missionTime);
 	Serial.println(c.battVoltage);
 	Serial.println();
+	//xbee.write(test);
 
 	if (command == 'r' && c.state == 0) {
 		c.release();
@@ -61,6 +62,7 @@ void loop() {
 	delay(1000);
 }
 
+//ISR for RX
 void processCommand() {
 	if (xbee.available()) {
 		command = xbee.read();

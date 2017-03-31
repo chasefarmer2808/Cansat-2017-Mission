@@ -48,9 +48,9 @@ void Container::setVoltage() {
 
 void Container::release() {
 	Serial.println("releasing...");
-	digitalWrite(this->releasePin, HIGH);
+	digitalWrite(this->releasePin, 1);  //turn on the Nichrome
 	delay(3000);
-	digitalWrite(this->releasePin, LOW);
-	//this->state = 1;
+	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
+	this->state = 1;  //set state to released
 	Serial.println("Glider should be released now");
 }
