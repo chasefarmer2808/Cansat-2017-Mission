@@ -10,7 +10,9 @@ Container::Container() {  //constructor implementation
 	lux = 0.0;
 	missionTime = 0;
 	battVoltage = 0.0;
-	state = 0;
+	state = EEPROM.read(STATE_ADDR);
+	//state = 0;
+	//EEPROM.write(STATE_ADDR, state);
 	packetCount = 0;
 	timeSet = false;
 }
@@ -72,4 +74,9 @@ void Container::createPacket() {
 						   String(this->battVoltage) +
 						    "," + 
 						   String(this->state));
+}
+
+void Container::saveState(uint8_t val) {
+	this->state = val;
+	EEPROM.write(STATE_ADDR, this->state);
 }

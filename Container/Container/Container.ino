@@ -57,7 +57,13 @@ void loop() {
 
 	if (command == 'r' && c.state == LAUNCH) {
 		c.release();
-		c.state = RELEASE;
+		c.saveState(RELEASE);
+		//c.state = RELEASE;
+		//EEPROM.write(STATE_ADDR, c.state);
+	}
+
+	if (command == 'l') {
+		c.saveState(LAUNCH);
 	}
 
 	if (c.state != LAND) {

@@ -40,6 +40,7 @@
 #ifndef Container_h
 #define Container_h
 
+#include <EEPROM.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
@@ -53,12 +54,16 @@
 #define R1 100000.0  //voltage divider R1 value in ohms
 #define R2 10000.0   //R2 value in ohms
 
-#define LAUNCH 0
+#define LAUNCH 255  //first state is 255 b/c all values in EEPROM are stored as 255
 #define RELEASE 1
 #define LAND 2
 
+#define STATE_ADDR 0
+
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
+
+//int s PROGMEM = 0;
 
 class Container {
 public:
@@ -71,7 +76,7 @@ public:
 	int missionTime;  //seconds elapsed
 	DateTime initialTime;
 	bool timeSet;
-	int state;  //launching(0), released(1), landed(2)
+	uint8_t state;  //launching(0), released(1), landed(2)
 	int lightPin = A0;  //analog input pin for the light sensor
 	int battPin = A1;  //analog pin for voltage divider input
 	int releasePin = 4;  //digital pin for NiChrome release
@@ -81,6 +86,7 @@ public:
 	void setLux();  //sets the lux attribute
 	void setMissionTime();  //set the elapsed time in seconds
 	void setVoltage();  //set the battVoltage attribute
+	void saveState(uint8_t val);
 	void release();  
 	void createPacket();
 	Adafruit_BMP085_Unified bmp;
