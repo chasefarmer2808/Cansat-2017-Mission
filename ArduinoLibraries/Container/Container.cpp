@@ -10,7 +10,10 @@ Container::Container() {  //constructor implementation
 	lux = 0.0;
 	missionTime = 0;
 	battVoltage = 0.0;
-	state = 0;
+	state = EEPROM.read(STATE_ADDR);
+	//state = 0;
+	//EEPROM.write(STATE_ADDR, state);
+	packetCount = 0;
 	timeSet = false;
 }
 
@@ -21,6 +24,7 @@ void Container::setBMP180Data() {
 	if (event.pressure) {
 		this->pressure = event.pressure;  //save the pressure
 		bmp.getTemperature(&this->temperature);  //save the temperature
+		this->altitude = bmp.pressureToAltitude(SENSORS_PRESSURE_SEALEVELHPA, event.pressure);
 	}
 }
 
@@ -53,4 +57,26 @@ void Container::release() {
 	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
 	this->state = 1;  //set state to released
 	Serial.println("Glider should be released now");
+}
+
+void Container::createPacket() {
+	this->packetCount++;
+
+	this->packet = String("3387,CONTAINER," + 
+						   String(this->missionTime) + 
+						    "," + 
+						   String(this->packetCount) +
+							"," + 
+						   String(this->altitude) + 
+						    "," + 
+						   String(this->temperature) + 
+							"," + 
+						   String(this->battVoltage) +
+						    "," + 
+						   String(this->state));
+}
+
+void Container::saveState(uint8_t val) {
+	this->state = val;
+	EEPROM.write(STATE_ADDR, this->state);
 }

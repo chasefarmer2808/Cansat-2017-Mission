@@ -47,16 +47,28 @@ void loop() {
 	c.setLux();
 	c.setMissionTime();
 	c.setVoltage();
+
 	Serial.println(c.temperature);
 	Serial.println(c.pressure);
 	Serial.println(c.lux); 
 	Serial.println(c.missionTime);
 	Serial.println(c.battVoltage);
 	Serial.println();
-	//xbee.write(test);
 
-	if (command == 'r' && c.state == 0) {
+	if (command == 'r' && c.state == LAUNCH) {
 		c.release();
+		c.saveState(RELEASE);
+		//c.state = RELEASE;
+		//EEPROM.write(STATE_ADDR, c.state);
+	}
+
+	if (command == 'l') {
+		c.saveState(LAUNCH);
+	}
+
+	if (c.state != LAND) {
+		c.createPacket();
+		xbee.println(c.packet);
 	}
 
 	delay(1000);
