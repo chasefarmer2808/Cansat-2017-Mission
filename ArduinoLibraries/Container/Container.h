@@ -63,8 +63,6 @@
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
 
-//int s PROGMEM = 0;
-
 class Container {
 public:
 	Container();  //constructor

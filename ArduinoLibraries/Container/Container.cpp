@@ -11,8 +11,6 @@ Container::Container() {  //constructor implementation
 	missionTime = 0;
 	battVoltage = 0.0;
 	state = EEPROM.read(STATE_ADDR);
-	//state = 0;
-	//EEPROM.write(STATE_ADDR, state);
 	packetCount = 0;
 	timeSet = false;
 }

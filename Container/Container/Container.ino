@@ -58,8 +58,6 @@ void loop() {
 	if (command == 'r' && c.state == LAUNCH) {
 		c.release();
 		c.saveState(RELEASE);
-		//c.state = RELEASE;
-		//EEPROM.write(STATE_ADDR, c.state);
 	}
 
 	if (command == 'l') {
