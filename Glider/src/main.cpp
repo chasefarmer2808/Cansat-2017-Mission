@@ -2,7 +2,7 @@
 
 Serial pc(USBTX, USBRX);
 
-LocalFileSystem local("telem");
+//LocalFileSystem local("telem");
 
 int main() {
     Glider g(&pc, p28, p27);
@@ -14,8 +14,8 @@ int main() {
         pc.printf("heading: %f\r\n", g.heading);
         pc.printf("pressure: %f\r\n", g.pressure);
         pc.printf("temp: %f\r\n", g.temp);
+        pc.printf("alt: %f\r\n", g.alt);
         wait(1);
     }
 
 }
-

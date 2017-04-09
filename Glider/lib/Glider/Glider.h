@@ -14,10 +14,11 @@ public:
     double heading;
     float pressure;
     float temp;
+    float alt;
     string telemetry;
     HMC5883L* hmc;
     BMP180* bmp;
-    Glider(Serial* device, PinName sda, PinName scl); 
+    Glider(Serial* device, PinName sda, PinName scl);
     void setHeading();
     void setTempPress();
     void saveTelem();

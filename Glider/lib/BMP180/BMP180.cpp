@@ -11,51 +11,51 @@
   Released under the MIT License (see http://mbed.org/license/mit)
 
   Documentation regarding the BMP180 can be found here:
-  
+
 */
 
 #include "BMP180.h"
 #include "mbed.h"
 
-// Uncomment to test the documentation algorithm against the documentation example 
+// Uncomment to test the documentation algorithm against the documentation example
 // Result should be 699.64 hPa and 15°C
-// #define BMP180_TEST_FORMULA 
+// #define BMP180_TEST_FORMULA
 
 BMP180::BMP180(PinName sda, PinName scl, int address)
    : m_i2c(sda,scl), m_addr(address)
 {
     m_altitude = 0;
-    m_oss = BMP180_OSS_NORMAL; 
+    m_oss = BMP180_OSS_NORMAL;
     m_temperature = UNSET_BMP180_TEMPERATURE_VALUE;
-    m_pressure = UNSET_BMP180_PRESSURE_VALUE;  
+    m_pressure = UNSET_BMP180_PRESSURE_VALUE;
 }
 
 BMP180::BMP180(I2C& i2c, int address)
    : m_i2c(i2c), m_addr(address)
 {
     m_altitude = 0;
-    m_oss = BMP180_OSS_NORMAL; 
+    m_oss = BMP180_OSS_NORMAL;
     m_temperature = UNSET_BMP180_TEMPERATURE_VALUE;
-    m_pressure = UNSET_BMP180_PRESSURE_VALUE;  
+    m_pressure = UNSET_BMP180_PRESSURE_VALUE;
 }
 
 int  BMP180::Initialize(float altitude, int overSamplingSetting)
 {
     char data[22];
     int errors = 0;
-        
+
     m_altitude = altitude;
-    m_oss = overSamplingSetting; 
+    m_oss = overSamplingSetting;
     m_temperature = UNSET_BMP180_TEMPERATURE_VALUE;
-    m_pressure = UNSET_BMP180_PRESSURE_VALUE;  
-    
+    m_pressure = UNSET_BMP180_PRESSURE_VALUE;
+
     // read calibration data
     data[0]=0xAA;
     errors = m_i2c.write(m_addr, data, 1);  // set the eeprom pointer position to 0xAA
-    errors += m_i2c.read(m_addr, data, 22); // read 11 x 16 bits at this position 
+    errors += m_i2c.read(m_addr, data, 22); // read 11 x 16 bits at this position
     wait_ms(10);
-    
-    // store calibration data for further calculus  
+
+    // store calibration data for further calculus
     ac1 = data[0]  << 8 | data[1];
     ac2 = data[2]  << 8 | data[3];
     ac3 = data[4]  << 8 | data[5];
@@ -87,14 +87,14 @@ int  BMP180::Initialize(float altitude, int overSamplingSetting)
     return errors? 0 : 1;
 }
 
-int BMP180::ReadData(float* pTemperature, float* pPressure)
+int BMP180::ReadData(float* pTemperature, float* pPressure, float* pAltitude)
 {
     long t, p;
 
     if (!ReadRawTemperature(&t) || !ReadRawPressure(&p))
     {
         m_temperature = UNSET_BMP180_TEMPERATURE_VALUE;
-        m_pressure = UNSET_BMP180_PRESSURE_VALUE;  
+        m_pressure = UNSET_BMP180_PRESSURE_VALUE;
         return 0;
     }
 
@@ -105,15 +105,25 @@ int BMP180::ReadData(float* pTemperature, float* pPressure)
         *pPressure = m_pressure;
     if (pTemperature)
         *pTemperature = m_temperature;
+    if (pAltitude)
+        *pAltitude = getAltitude(pPressure);
 
     return 1;
+}
+
+float BMP180::getAltitude(float* p) {
+    //return 44330.0 * (1.0 - pow((*p / m_altitude), (float)0.1903));
+    float altitude = (*p / m_altitude);
+    altitude = pow(altitude, (float)(1 / 5.255));
+    altitude = 44330 * (1 - altitude);
+    return altitude;
 }
 
 int BMP180::ReadRawTemperature(long* pUt)
 {
     int errors = 0;
     char data[2];
-    
+
     // request temperature measurement
     data[0] = 0xF4;
     data[1] = 0x2E;
@@ -124,8 +134,8 @@ int BMP180::ReadRawTemperature(long* pUt)
     // read raw temperature data
     data[0] = 0xF6;
     errors += m_i2c.write(m_addr, data, 2); // set eeprom pointer position to 0XF6
-    errors += m_i2c.read(m_addr, data, 2);  // get 16 bits at this position 
-    
+    errors += m_i2c.read(m_addr, data, 2);  // get 16 bits at this position
+
 #ifdef BMP180_TEST_FORMULA
     errors = 0;
 #endif // #ifdef BMP180_TEST_FORMULA
@@ -138,7 +148,7 @@ int BMP180::ReadRawTemperature(long* pUt)
 #ifdef BMP180_TEST_FORMULA
     *pUt = 27898;
 #endif // #ifdef BMP180_TEST_FORMULA
-    
+
     return 1;
 }
 
@@ -146,7 +156,7 @@ int BMP180::ReadRawPressure(long* pUp)
 {
     int errors = 0;
     char data[2];
-    
+
     // request pressure measurement
     data[0] = 0xF4;
     data[1] = 0x34 + (m_oss << 6);
@@ -163,8 +173,8 @@ int BMP180::ReadRawPressure(long* pUp)
     // read raw pressure data
     data[0] = 0xF6;
     errors += m_i2c.write(m_addr, data, 1); // set eeprom pointer position to 0XF6
-    errors += m_i2c.read(m_addr, data, 2);  // get 16 bits at this position     
-    
+    errors += m_i2c.read(m_addr, data, 2);  // get 16 bits at this position
+
 #ifdef BMP180_TEST_FORMULA
     errors = 0;
 #endif // #ifdef BMP180_TEST_FORMULA
@@ -183,7 +193,7 @@ int BMP180::ReadRawPressure(long* pUp)
 float BMP180::TrueTemperature(long ut)
 {
     long t;
-    
+
     // straight out from the documentation
     x1 = ((ut - ac6) * ac5) >> 15;
     x2 = ((long)mc << 11) / (x1 + md);
@@ -197,7 +207,7 @@ float BMP180::TrueTemperature(long ut)
 float BMP180::TruePressure(long up)
 {
     long p;
-    
+
     // straight out from the documentation
     b6 = b5 - 4000;
     x1 = (b2 * (b6 * b6 >> 12)) >> 11;
@@ -218,9 +228,9 @@ float BMP180::TruePressure(long up)
     x2 = (-7357 * p) >> 16;
     p = p + ((x1 + x2 + 3791) >> 4);
 
-    // convert to hPa and, if altitude has been initialized, to sea level pressure  
+    // convert to hPa and, if altitude has been initialized, to sea level pressure
     if (m_altitude == 0.F)
         return p / 100.F;
     else
-        return  p / (100.F * pow((1.F - m_altitude / 44330.0L), 5.255L)); 
+        return  p / (100.F * pow((1.F - m_altitude / 44330.0L), 5.255L));
 }
