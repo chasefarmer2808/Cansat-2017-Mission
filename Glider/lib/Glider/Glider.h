@@ -16,11 +16,14 @@ public:
     float pressure;
     float temp;
     float alt;
+    time_t startTime;
+    time_t missionTime;
     HMC5883L* hmc;
     BMP180* bmp;
     Glider(Serial* device, PinName sda, PinName scl, PinName tx, PinName rx);
     void setHeading();
     void setTempPress();
+    void setMissionTime();
     void saveTelem();
     void transmitPacket();
 };

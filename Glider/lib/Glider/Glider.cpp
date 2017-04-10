@@ -1,6 +1,7 @@
 #include "Glider.h"
 
 Glider::Glider(Serial* device, PinName sda, PinName scl, PinName tx, PinName rx) {
+    startTime = time(NULL);
     dev = device;
     xbee = new Serial(tx, rx);
     dev->printf("constructing glider...");
@@ -21,6 +22,10 @@ void Glider::setTempPress() {
     bmp->ReadData(&this->temp, &this->pressure, &this->alt);
 }
 
+void Glider::setMissionTime() {
+    this->missionTime = time(NULL) - this->startTime;
+}
+
 void Glider::saveTelem() {
      FILE *fp = fopen("/telem/telem.txt", "w");
      fprintf(fp, "hello,");
@@ -30,5 +35,5 @@ void Glider::saveTelem() {
 void Glider::transmitPacket() {
     //TODO: transmit mission time, packet count, alt, pressure, speed
             //temp, voltage, state
-    xbee->printf("3387, GLIDER, %f\r\n", this->heading);
+    xbee->printf("3387, GLIDER, %f, %d\r\n", this->heading, this->missionTime);
 }
