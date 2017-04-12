@@ -11,7 +11,7 @@ Container::Container() {  //constructor implementation
 	missionTime = 0;
 	battVoltage = 0.0;
 	state = EEPROM.read(STATE_ADDR);
-	packetCount = 0;
+	packetCount = EEPROM.read(PACKET_ADDR);
 	timeSet = false;
 }
 
@@ -40,6 +40,7 @@ void Container::setMissionTime() {
 
 	DateTime currentTime = rtc.now();
 	this->missionTime = currentTime.unixtime() - this->initialTime.unixtime();
+	EEPROM.write (MISSIONTIME_ADDR, this->missionTime);
 }
 
 void Container::setVoltage() {
@@ -59,18 +60,18 @@ void Container::release() {
 
 void Container::createPacket() {
 	this->packetCount++;
-
-	this->packet = String("3387,CONTAINER," + 
-						   String(this->missionTime) + 
-						    "," + 
+	EEPROM.write(PACKET_ADDR, this->packetCount);
+	this->packet = String("3387,CONTAINER," +
+						   String(this->missionTime) +
+						    "," +
 						   String(this->packetCount) +
-							"," + 
-						   String(this->altitude) + 
-						    "," + 
-						   String(this->temperature) + 
-							"," + 
+							"," +
+						   String(this->altitude) +
+						    "," +
+						   String(this->temperature) +
+							"," +
 						   String(this->battVoltage) +
-						    "," + 
+						    "," +
 						   String(this->state));
 }
 

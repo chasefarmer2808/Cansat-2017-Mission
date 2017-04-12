@@ -59,6 +59,8 @@
 #define LAND 2
 
 #define STATE_ADDR 0
+#define PACKET_ADDR 1
+#define MISSIONTIME_ADDR 3
 
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
@@ -69,7 +71,7 @@ public:
 	float temperature;  //C
 	float altitude;  //meters
 	float pressure;  //hPa
-	float lux;  
+	float lux;
 	float battVoltage;  //volts
 	int missionTime;  //seconds elapsed
 	DateTime initialTime;
@@ -79,13 +81,13 @@ public:
 	int battPin = A1;  //analog pin for voltage divider input
 	int releasePin = 4;  //digital pin for NiChrome release
 	int packetCount;
-	String packet; 
+	String packet;
 	void setBMP180Data();  //sets temp and pressure attributes
 	void setLux();  //sets the lux attribute
 	void setMissionTime();  //set the elapsed time in seconds
 	void setVoltage();  //set the battVoltage attribute
 	void saveState(uint8_t val);
-	void release();  
+	void release();
 	void createPacket();
 	Adafruit_BMP085_Unified bmp;
 	RTC_DS3231 rtc;
