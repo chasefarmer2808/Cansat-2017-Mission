@@ -7,6 +7,7 @@
 // the setup function runs once when you press reset or power the board
 
 #include <Container.h>
+#include <TimerOne.h>
 
 #define BAUD 9600
 
@@ -36,6 +37,9 @@ void setup() {
 		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  //initialize the time
 	}
 
+  Timer1.initialize();
+  Timer1.attachInterrupt(sendPacket); //Interrupt using a timer to send a packet every second
+  
 	pinMode(c.battPin, INPUT);  //set the voltage input
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
@@ -78,3 +82,10 @@ void processCommand() {
 		command = xbee.read();
 	}
 }
+
+void sendPacket(){
+  Serial.println("Packet Sent");
+}
+
+
+
