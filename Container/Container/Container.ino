@@ -13,6 +13,8 @@
 
 Container c = Container();
 
+bool packetFlag=false;
+
 volatile char command;  //global command variable
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
@@ -73,6 +75,12 @@ void loop() {
 		xbee.println(c.packet);
 	}
 
+  if(packetFlag==true){
+    c.createPacket();
+    xbee.println(c.packet);
+    packetFlag=false;
+  }
+
 	delay(1000);
 }
 
@@ -84,7 +92,7 @@ void processCommand() {
 }
 
 void sendPacket(){
-  Serial.println("Packet Sent");
+  packetFlag=true;
 }
 
 
