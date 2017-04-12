@@ -72,16 +72,15 @@ void loop() {
 
 	if (c.state != LAND) {
 		c.createPacket();
-		xbee.println(c.packet);
+		//xbee.println(c.packet);
 	}
 
+
   if(packetFlag==true){
-    c.createPacket();
     xbee.println(c.packet);
     packetFlag=false;
   }
 
-	delay(1000);
 }
 
 //ISR for RX
