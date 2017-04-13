@@ -7,10 +7,13 @@
 // the setup function runs once when you press reset or power the board
 
 #include <Container.h>
+#include <TimerOne.h>
 
 #define BAUD 9600
 
 Container c = Container();
+
+bool packetFlag=false;
 
 volatile char command;  //global command variable
 
@@ -36,6 +39,9 @@ void setup() {
 		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  //initialize the time
 	}
 
+  Timer1.initialize();
+  Timer1.attachInterrupt(sendPacket); //Interrupt using a timer to send a packet every second
+  
 	pinMode(c.battPin, INPUT);  //set the voltage input
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
@@ -66,10 +72,15 @@ void loop() {
 
 	if (c.state != LAND) {
 		c.createPacket();
-		xbee.println(c.packet);
+		//xbee.println(c.packet);
 	}
 
-	delay(1000);
+
+  if(packetFlag==true){
+    xbee.println(c.packet);
+    packetFlag=false;
+  }
+
 }
 
 //ISR for RX
@@ -78,3 +89,10 @@ void processCommand() {
 		command = xbee.read();
 	}
 }
+
+void sendPacket(){
+  packetFlag=true;
+}
+
+
+
