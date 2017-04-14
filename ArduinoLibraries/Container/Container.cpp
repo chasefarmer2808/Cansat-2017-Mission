@@ -13,6 +13,8 @@ Container::Container() {  //constructor implementation
 	state = EEPROM.read(STATE_ADDR);
 	packetCount = EEPROM.read(PACKET_ADDR);
 	timeSet = false;
+	transmitFlag = false;
+	cmdFlag = false;
 }
 
 void Container::setBMP180Data() {
@@ -49,6 +51,22 @@ void Container::setVoltage() {
 	this->battVoltage = rawVoltage / (R2 / (R1 + R2));
 }
 
+void Container::processCommand(SoftwareSerial* xbee) {
+	if (xbee->available()) {
+		this->command = xbee->read();
+	}
+
+	if (this->command == CMD_RELEASE && this->state == LAUNCH) {
+		this->release();
+		this->saveState(RELEASE);
+	}
+	else if (this->command == CMD_RESET) {
+		xbee->println("resetting data...");
+		this->resetSaveData();
+		this->saveState(LAUNCH);
+	}
+}
+
 void Container::release() {
 	Serial.println("releasing...");
 	digitalWrite(this->releasePin, 1);  //turn on the Nichrome
@@ -78,4 +96,10 @@ void Container::createPacket() {
 void Container::saveState(uint8_t val) {
 	this->state = val;
 	EEPROM.write(STATE_ADDR, this->state);
+}
+
+void Container::resetSaveData() {
+	for (int i = 0; i < 4; i++) {
+		EEPROM.write(i, 0);
+	}
 }
