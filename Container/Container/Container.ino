@@ -7,7 +7,6 @@
 // the setup function runs once when you press reset or power the board
 
 #include <Container.h>
-//#include <TimerOne.h>
 
 Container c = Container();
 //volatile char command;  //global command variable 
@@ -67,6 +66,7 @@ void loop() {
 	*/
 	if (c.state != LAND) {
 		c.createPacket();
+		c.saveEEPROMData();
 		//save here
 	}
 
@@ -77,6 +77,8 @@ void loop() {
 
 
 	if (c.transmitFlag){
+		c.packetCount++;
+		EEPROM.write(PACKET_ADDR, c.packetCount);
 	    xbee.println(c.packet);
 	    c.transmitFlag = false;
 	}

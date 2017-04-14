@@ -10,8 +10,8 @@ Container::Container() {  //constructor implementation
 	lux = 0.0;
 	missionTime = 0;
 	battVoltage = 0.0;
-	state = EEPROM.read(STATE_ADDR);
-	packetCount = EEPROM.read(PACKET_ADDR);
+	EEPROM.get(STATE_ADDR, state);
+	EEPROM.get(PACKET_ADDR, packetCount);
 	timeSet = false;
 	transmitFlag = false;
 	cmdFlag = false;
@@ -42,7 +42,7 @@ void Container::setMissionTime() {
 
 	DateTime currentTime = rtc.now();
 	this->missionTime = currentTime.unixtime() - this->initialTime.unixtime();
-	EEPROM.write (MISSIONTIME_ADDR, this->missionTime);
+	//EEPROM.write (MISSIONTIME_ADDR, this->missionTime);
 }
 
 void Container::setVoltage() {
@@ -58,12 +58,12 @@ void Container::processCommand(SoftwareSerial* xbee) {
 
 	if (this->command == CMD_RELEASE && this->state == LAUNCH) {
 		this->release();
-		this->saveState(RELEASE);
+		this->setState(RELEASE);
 	}
 	else if (this->command == CMD_RESET) {
 		xbee->println("resetting data...");
 		this->resetSaveData();
-		this->saveState(LAUNCH);
+		this->setState(LAUNCH);
 	}
 }
 
@@ -77,8 +77,7 @@ void Container::release() {
 }
 
 void Container::createPacket() {
-	this->packetCount++;
-	EEPROM.write(PACKET_ADDR, this->packetCount);
+	
 	this->packet = String("3387,CONTAINER," +
 						   String(this->missionTime) +
 						    "," +
@@ -93,13 +92,23 @@ void Container::createPacket() {
 						   String(this->state));
 }
 
-void Container::saveState(uint8_t val) {
+void Container::setState(uint8_t val) {
 	this->state = val;
-	EEPROM.write(STATE_ADDR, this->state);
+	//EEPROM.write(STATE_ADDR, this->state);
+}
+
+void Container::saveEEPROMData() {
+	EEPROM.update(STATE_ADDR, this->state);
+	EEPROM.update(PACKET_ADDR, this->packetCount);
+	//EEPROM.update(MISSIONTIME_ADDR, this->initialTime);
 }
 
 void Container::resetSaveData() {
-	for (int i = 0; i < 4; i++) {
-		EEPROM.write(i, 0);
+	/*
+	for (int i = 0; i < 5; i++) {
+		EEPROM[i] = 0;
 	}
+	*/
+	EEPROM.update(STATE_ADDR, 0x00);
+	EEPROM.update(PACKET_ADDR, 0x0000);
 }

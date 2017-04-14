@@ -77,7 +77,7 @@ public:
 	float pressure;  //hPa
 	float lux;
 	float battVoltage;  //volts
-	int missionTime;  //seconds elapsed
+	uint16_t missionTime;  //seconds elapsed
 	DateTime initialTime;
 	bool timeSet;
 	bool transmitFlag;
@@ -86,7 +86,7 @@ public:
 	int lightPin = A0;  //analog input pin for the light sensor
 	int battPin = A1;  //analog pin for voltage divider input
 	int releasePin = 4;  //digital pin for NiChrome release
-	int packetCount;
+	uint16_t packetCount;
 	String packet;
 	char command;
 	void setBMP180Data();  //sets temp and pressure attributes
@@ -94,7 +94,8 @@ public:
 	void setMissionTime();  //set the elapsed time in seconds
 	void setVoltage();  //set the battVoltage attribute
 	void processCommand(SoftwareSerial* xbee);
-	void saveState(uint8_t val);
+	void setState(uint8_t val);
+	void saveEEPROMData();
 	void release();
 	void createPacket();
 	void resetSaveData();
