@@ -11,11 +11,14 @@
  *  SDA    -  SDA
  */
 
-DateTime initialTime;
-bool timeSet;
+DateTime initialTime, currentTime;
+bool timeSet, timeAdjusted;
 RTC_DS3231 rtc;
 
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+double timeReducer=0.9999999; 
+int currentUnixTime, initialUnixTime;
 
 void setup () {
 
@@ -45,15 +48,28 @@ void setup () {
 }
 
 void loop () {
+    
+    
     if (!timeSet){
       initialTime=rtc.now();
       timeSet=true;
     }
-    DateTime currentTime = rtc.now();
+    currentTime = rtc.now();
     TimeSpan missionDateTime=(currentTime-initialTime);
     int missionTime=currentTime.unixtime()-initialTime.unixtime();
-    
+
+    //Serial.println((uint16_t)currentTime.unixtime());
     Serial.println(missionTime);
 
     delay(1000);
 }
+
+void unixReducer (){
+  if(!timeAdjusted){
+    initialUnixTime=initialTime.unixtime()-(initialTime.unixtime()-5);
+    timeAdjusted=true;
+  }
+  currentUnixTime=currentTime.unixtime()-(currentTime.unixtime()-5);
+}
+
+
