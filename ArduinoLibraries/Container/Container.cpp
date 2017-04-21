@@ -8,11 +8,19 @@ Container::Container() {  //constructor implementation
 	temperature = 0.0;
 	pressure = 0.0;
 	lux = 0.0;
-	missionTime = 0;
 	battVoltage = 0.0;
-	state = EEPROM.read(STATE_ADDR);
-	packetCount = 0;
-	timeSet = false;
+	transmitFlag = false;
+	cmdFlag = false;
+
+	EEPROM_read(STATE_ADDR, state);
+	EEPROM_read(PACKET_ADDR, packetCount);
+	EEPROM_read(INITIALTIME_ADDR, initialTime);
+
+	//Serial.println(initialTime);
+
+	//if (initialTime == 0) {
+		//timeSet = false;
+	//}
 }
 
 void Container::setBMP180Data() {
@@ -33,19 +41,37 @@ void Container::setLux() {
 }
 
 void Container::setMissionTime() {
-	if (!this->timeSet) {
-		this->initialTime = rtc.now();
-		this->timeSet = true;
+	if (this->initialTime == 0) {//!this->timeSet) {
+		this->initialTime = rtc.now().unixtime();
+		//EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+		//this->timeSet = true;
 	}
 
 	DateTime currentTime = rtc.now();
-	this->missionTime = currentTime.unixtime() - this->initialTime.unixtime();
+	this->missionTime = currentTime.unixtime() - this->initialTime;
 }
 
 void Container::setVoltage() {
 	int input = analogRead(this->battPin);
 	float rawVoltage = (input * LOGRANGE) / RANGE5V;
-	this->battVoltage = rawVoltage / (R2 / (R1 + R2));
+	this->battVoltage = rawVoltage / VOLT_DIV_RATIO;
+}
+
+void Container::processCommand(SoftwareSerial* xbee) {
+	if (xbee->available()) {
+		this->command = xbee->read();
+	}
+
+	if (this->command == CMD_RELEASE && this->state == LAUNCH) {
+		this->release();
+		this->setState(RELEASE);
+	}
+	else if (this->command == CMD_RESET) {
+		xbee->println("resetting data...");
+		this->resetSaveData();
+	}
+
+	this->command = NULL;  //band-aid for rx every second bug
 }
 
 void Container::release() {
@@ -58,23 +84,37 @@ void Container::release() {
 }
 
 void Container::createPacket() {
-	this->packetCount++;
-
-	this->packet = String("3387,CONTAINER," + 
-						   String(this->missionTime) + 
-						    "," + 
+	
+	this->packet = String("3387,CONTAINER," +
+						   String(this->missionTime) +
+						    "," +
 						   String(this->packetCount) +
-							"," + 
-						   String(this->altitude) + 
-						    "," + 
-						   String(this->temperature) + 
-							"," + 
+							"," +
+						   String(this->altitude) +
+						    "," +
+						   String(this->temperature) +
+							"," +
 						   String(this->battVoltage) +
-						    "," + 
+						    "," +
 						   String(this->state));
 }
 
-void Container::saveState(uint8_t val) {
+void Container::setState(uint8_t val) {
 	this->state = val;
-	EEPROM.write(STATE_ADDR, this->state);
+}
+
+void Container::saveEEPROMData() {
+	EEPROM_write(STATE_ADDR, this->state);
+	EEPROM_write(PACKET_ADDR, this->packetCount);
+	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+}
+
+void Container::resetSaveData() {
+	this->state = 0;
+	this->packetCount = 0;
+	this->initialTime = 0;
+
+	EEPROM_write(STATE_ADDR, this->state);
+	EEPROM_write(PACKET_ADDR, this->packetCount);
+	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
 }
