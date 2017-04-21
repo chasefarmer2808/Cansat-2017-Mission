@@ -40,20 +40,22 @@
 #ifndef Container_h
 #define Container_h
 
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <RTClib.h>
 #include <TimerOne.h>
+#include <EEPROM_Helper.h>
 #include "Arduino.h"
 
-#define RANGE5V 1024  //max range of the ADC
-#define LOGRANGE 5.0
+#define RANGE5V 1023  //max range of the ADC
+#define LOGRANGE 5.0  //max voltage input for default reference
 
-#define R1 100000.0  //voltage divider R1 value in ohms
-#define R2 10000.0   //R2 value in ohms
+#define R1 1000.0  //voltage divider R1 value in ohms
+#define R2 1330.0   //R2 value in ohms
+#define VOLT_DIV_RATIO (R2 / (R1 + R2))
 
 #define LAUNCH 0  //first state is 255 b/c all values in EEPROM are stored as 255
 #define RELEASE 1
@@ -61,10 +63,12 @@
 
 #define STATE_ADDR 0
 #define PACKET_ADDR 1
-#define MISSIONTIME_ADDR 3
+#define INITIALTIME_ADDR 3
 
 #define CMD_RELEASE 'r'
 #define CMD_RESET 'z'
+
+//float VOLT_DIV_RATIO = R2 / (R1 + R2);
 
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
@@ -78,7 +82,7 @@ public:
 	float lux;
 	float battVoltage;  //volts
 	uint16_t missionTime;  //seconds elapsed
-	DateTime initialTime;
+	long initialTime;
 	bool timeSet;
 	bool transmitFlag;
 	bool cmdFlag;

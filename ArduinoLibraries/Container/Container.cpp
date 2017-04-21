@@ -8,13 +8,19 @@ Container::Container() {  //constructor implementation
 	temperature = 0.0;
 	pressure = 0.0;
 	lux = 0.0;
-	missionTime = 0;
 	battVoltage = 0.0;
-	EEPROM.get(STATE_ADDR, state);
-	EEPROM.get(PACKET_ADDR, packetCount);
-	timeSet = false;
 	transmitFlag = false;
 	cmdFlag = false;
+
+	EEPROM_read(STATE_ADDR, state);
+	EEPROM_read(PACKET_ADDR, packetCount);
+	EEPROM_read(INITIALTIME_ADDR, initialTime);
+
+	//Serial.println(initialTime);
+
+	//if (initialTime == 0) {
+		//timeSet = false;
+	//}
 }
 
 void Container::setBMP180Data() {
@@ -35,20 +41,20 @@ void Container::setLux() {
 }
 
 void Container::setMissionTime() {
-	if (!this->timeSet) {
-		this->initialTime = rtc.now();
-		this->timeSet = true;
+	if (this->initialTime == 0) {//!this->timeSet) {
+		this->initialTime = rtc.now().unixtime();
+		//EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+		//this->timeSet = true;
 	}
 
 	DateTime currentTime = rtc.now();
-	this->missionTime = currentTime.unixtime() - this->initialTime.unixtime();
-	//EEPROM.write (MISSIONTIME_ADDR, this->missionTime);
+	this->missionTime = currentTime.unixtime() - this->initialTime;
 }
 
 void Container::setVoltage() {
 	int input = analogRead(this->battPin);
 	float rawVoltage = (input * LOGRANGE) / RANGE5V;
-	this->battVoltage = rawVoltage / (R2 / (R1 + R2));
+	this->battVoltage = rawVoltage / VOLT_DIV_RATIO;
 }
 
 void Container::processCommand(SoftwareSerial* xbee) {
@@ -63,8 +69,9 @@ void Container::processCommand(SoftwareSerial* xbee) {
 	else if (this->command == CMD_RESET) {
 		xbee->println("resetting data...");
 		this->resetSaveData();
-		this->setState(LAUNCH);
 	}
+
+	this->command = NULL;  //band-aid for rx every second bug
 }
 
 void Container::release() {
@@ -94,21 +101,20 @@ void Container::createPacket() {
 
 void Container::setState(uint8_t val) {
 	this->state = val;
-	//EEPROM.write(STATE_ADDR, this->state);
 }
 
 void Container::saveEEPROMData() {
-	EEPROM.update(STATE_ADDR, this->state);
-	EEPROM.update(PACKET_ADDR, this->packetCount);
-	//EEPROM.update(MISSIONTIME_ADDR, this->initialTime);
+	EEPROM_write(STATE_ADDR, this->state);
+	EEPROM_write(PACKET_ADDR, this->packetCount);
+	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
 }
 
 void Container::resetSaveData() {
-	/*
-	for (int i = 0; i < 5; i++) {
-		EEPROM[i] = 0;
-	}
-	*/
-	EEPROM.update(STATE_ADDR, 0x00);
-	EEPROM.update(PACKET_ADDR, 0x0000);
+	this->state = 0;
+	this->packetCount = 0;
+	this->initialTime = 0;
+
+	EEPROM_write(STATE_ADDR, this->state);
+	EEPROM_write(PACKET_ADDR, this->packetCount);
+	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
 }
