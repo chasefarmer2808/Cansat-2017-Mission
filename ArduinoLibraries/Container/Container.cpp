@@ -70,6 +70,9 @@ void Container::processCommand(SoftwareSerial* xbee) {
 		xbee->println("resetting data...");
 		this->resetSaveData();
 	}
+	else if (this->command == CMD_BUZZER) {
+		tone(this->buzzPin, BUZZ_FREQ, 3000);
+	}
 
 	this->command = NULL;  //band-aid for rx every second bug
 }

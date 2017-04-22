@@ -66,7 +66,10 @@
 #define INITIALTIME_ADDR 3
 
 #define CMD_RELEASE 'r'
+#define CMD_BUZZER 'b'
 #define CMD_RESET 'z'
+
+#define BUZZ_FREQ 262
 
 //float VOLT_DIV_RATIO = R2 / (R1 + R2);
 
@@ -89,6 +92,7 @@ public:
 	uint8_t state;  //launching(0), released(1), landed(2)
 	int lightPin = A0;  //analog input pin for the light sensor
 	int battPin = A1;  //analog pin for voltage divider input
+	int buzzPin = 5;
 	int releasePin = 4;  //digital pin for NiChrome release
 	uint16_t packetCount;
 	String packet;
