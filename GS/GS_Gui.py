@@ -1,11 +1,14 @@
 import sys
 import serial
+import csv
 from PyQt4 import QtGui, QtCore
 
 CMD_RELEASE = 'r'
 CMD_BUZZER = 'b'
 CMD_RESET = 'z'
 CMD_LAND = 'l'
+
+CSV_FILE_NAME = 'telemetry.csv'
 
 xbee = serial.Serial('COM3', timeout=0.1)  #initialize a serial object on the com port
 
@@ -17,8 +20,16 @@ xbee = serial.Serial('COM3', timeout=0.1)  #initialize a serial object on the co
 def read_packet():
     packet = xbee.readline()  #read chars until '\r\n'
 
-    if packet:
+    if packet: #if any chars were read
         print(packet)
+        write_csv(packet)  #save telemetry packet to csv
+
+
+def write_csv(packet):
+    with open(CSV_FILE_NAME, 'ab') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow([packet])
+        csvfile.close()
 
 '''
     this is a handler class for PyQt.  It handles drawing the window, buttons, and graphs
