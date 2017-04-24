@@ -71,7 +71,10 @@ void Container::processCommand(SoftwareSerial* xbee) {
 		this->resetSaveData();
 	}
 	else if (this->command == CMD_BUZZER) {
-		tone(this->buzzPin, BUZZ_FREQ, 3000);
+		this->buzz(3000, false);  //sound buzzer for specified amount of time
+	}
+	else if (this->command == CMD_LAND) {
+		this->endMission();  //set state for last time, stop timer interrupt, and sound buzzer
 	}
 
 	this->command = NULL;  //band-aid for rx every second bug
@@ -120,4 +123,20 @@ void Container::resetSaveData() {
 	EEPROM_write(STATE_ADDR, this->state);
 	EEPROM_write(PACKET_ADDR, this->packetCount);
 	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+}
+
+void Container::buzz(int dur, bool infinate) {  //dur in millis
+	if (infinate) {
+		tone(buzzPin, BUZZ_FREQ);
+		while (1);
+	}
+
+	tone(buzzPin, BUZZ_FREQ, dur);
+}
+
+void Container::endMission() {
+	this->setState(LAND);
+	Timer1.detachInterrupt();
+	this->buzz(0, true);
+	while (1);
 }

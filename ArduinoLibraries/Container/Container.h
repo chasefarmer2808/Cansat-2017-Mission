@@ -68,6 +68,7 @@
 #define CMD_RELEASE 'r'
 #define CMD_BUZZER 'b'
 #define CMD_RESET 'z'
+#define CMD_LAND 'l'
 
 #define BUZZ_FREQ 262
 
@@ -107,6 +108,8 @@ public:
 	void release();
 	void createPacket();
 	void resetSaveData();
+	void buzz(int dur, bool infinate);
+	void endMission();
 	Adafruit_BMP085_Unified bmp;
 	RTC_DS3231 rtc;
 };

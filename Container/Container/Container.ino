@@ -9,7 +9,6 @@
 #include <Container.h>
 
 Container c = Container();
-//volatile char command;  //global command variable 
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
