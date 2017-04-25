@@ -40,8 +40,9 @@
 #ifndef Container_h
 #define Container_h
 
-//#include <EEPROM.h>
 #include <Wire.h>
+#include <SD.h>
+#include <SPI.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
@@ -72,7 +73,9 @@
 
 #define BUZZ_FREQ 262
 
-//float VOLT_DIV_RATIO = R2 / (R1 + R2);
+#define TELEM_FILE "Flight_Data.txt"
+
+#define RELEASE_TIME_LIMIT 10
 
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
@@ -90,14 +93,18 @@ public:
 	bool timeSet;
 	bool transmitFlag;
 	bool cmdFlag;
+	bool releasing;
 	uint8_t state;  //launching(0), released(1), landed(2)
+	uint8_t releaseCount;
 	int lightPin = A0;  //analog input pin for the light sensor
 	int battPin = A1;  //analog pin for voltage divider input
+	int magnetPin = 6;
 	int buzzPin = 5;
 	int releasePin = 4;  //digital pin for NiChrome release
 	uint16_t packetCount;
 	String packet;
 	char command;
+	File flightData;
 	void setBMP180Data();  //sets temp and pressure attributes
 	void setLux();  //sets the lux attribute
 	void setMissionTime();  //set the elapsed time in seconds
@@ -105,6 +112,7 @@ public:
 	void processCommand(SoftwareSerial* xbee);
 	void setState(uint8_t val);
 	void saveEEPROMData();
+	void saveTelem();
 	void release();
 	void createPacket();
 	void resetSaveData();

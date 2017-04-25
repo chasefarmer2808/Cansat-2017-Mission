@@ -11,16 +11,13 @@ Container::Container() {  //constructor implementation
 	battVoltage = 0.0;
 	transmitFlag = false;
 	cmdFlag = false;
+	releasing = false;
+	releaseCount = 0;
 
 	EEPROM_read(STATE_ADDR, state);
 	EEPROM_read(PACKET_ADDR, packetCount);
 	EEPROM_read(INITIALTIME_ADDR, initialTime);
 
-	//Serial.println(initialTime);
-
-	//if (initialTime == 0) {
-		//timeSet = false;
-	//}
 }
 
 void Container::setBMP180Data() {
@@ -43,8 +40,6 @@ void Container::setLux() {
 void Container::setMissionTime() {
 	if (this->initialTime == 0) {//!this->timeSet) {
 		this->initialTime = rtc.now().unixtime();
-		//EEPROM_write(INITIALTIME_ADDR, this->initialTime);
-		//this->timeSet = true;
 	}
 
 	DateTime currentTime = rtc.now();
@@ -81,16 +76,24 @@ void Container::processCommand(SoftwareSerial* xbee) {
 }
 
 void Container::release() {
-	Serial.println("releasing...");
+	this->releasing = true;  //set the counter flag to true
+
 	digitalWrite(this->releasePin, 1);  //turn on the Nichrome
-	delay(3000);
+
+	while (digitalRead(this->magnetPin)) {  //while the magnet is closed
+		if (this->releaseCount > RELEASE_TIME_LIMIT) {  //hold the nichrome on until the magnet opens 
+			break;										//or until a count limit is reached (seconds)
+		}
+	}
+
 	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
+	this->releasing = false;  //stop counting
+	this->releaseCount = 0;  //reset counter for in-the-loop retesting (no MCU reset required)
 	this->state = 1;  //set state to released
-	Serial.println("Glider should be released now");
 }
 
 void Container::createPacket() {
-	
+
 	this->packet = String("3387,CONTAINER," +
 						   String(this->missionTime) +
 						    "," +
@@ -113,6 +116,17 @@ void Container::saveEEPROMData() {
 	EEPROM_write(STATE_ADDR, this->state);
 	EEPROM_write(PACKET_ADDR, this->packetCount);
 	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+}
+
+void Container::saveTelem() {
+	this->flightData = SD.open("Flight_Data.txt", FILE_WRITE);
+
+	if (this->flightData) {
+		Serial.println("saving");
+		this->flightData.println(this->packet);
+		this->flightData.close();
+	}
+	
 }
 
 void Container::resetSaveData() {

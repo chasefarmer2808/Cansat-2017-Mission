@@ -12,11 +12,16 @@ Container c = Container();
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
-void setup() {
+void setup() { 
 	Serial.begin(9600);
 	xbee.begin(9600);  //start the software serial port
 	analogReference(DEFAULT);  //reference range 0V - 5V
-
+	/*
+	if (!SD.begin(10)) {
+		Serial.println("SD failed");
+		return;
+	}
+	*/
 	if (!c.bmp.begin()) {
 		Serial.print("BMP failed");
 		while (1);
@@ -35,6 +40,7 @@ void setup() {
 	Timer1.attachInterrupt(sendPacket); //Interrupt using a timer to send a packet every second
 	pinMode(c.battPin, INPUT);  //set the voltage input
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
+	pinMode(c.magnetPin, INPUT);
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
 }
 
@@ -57,6 +63,7 @@ void loop() {
 	if (c.state != LAND) {
 		c.createPacket();
 		//save here
+		//c.saveTelem();
 	}
 
 	if (c.cmdFlag) {
@@ -81,7 +88,11 @@ void processCommand() {
 
 //ISR for transmitting telemetry
 void sendPacket() {
-  c.transmitFlag = true;
+	c.transmitFlag = true;
+
+	if (c.releasing) {
+		c.releaseCount++;
+	}
 }
 
 
