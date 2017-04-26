@@ -8,13 +8,15 @@
 
 #include <Container.h>
 
-Container c = Container();
+//Container c = Container();
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
+Container c = Container(&xbee);
+
 void setup() { 
 	Serial.begin(9600);
-	xbee.begin(9600);  //start the software serial port
+	//xbee.begin(9600);  //start the software serial port
 	analogReference(DEFAULT);  //reference range 0V - 5V
 	/*
 	if (!SD.begin(10)) {
@@ -46,36 +48,61 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() { 
+	/*
 	c.setBMP180Data(); 
 	c.setLux();
 	c.setMissionTime();
 	c.setVoltage();
-	//Serial.println(c.missionTime);
-	//Serial.println(c.lux);
-	/*
-	Serial.println(c.temperature);
-	Serial.println(c.pressure);
-	Serial.println(c.lux); 
-	Serial.println(c.missionTime);
-	Serial.println(c.battVoltage);
-	Serial.println();
 	*/
+
+	switch (c.state) {
+	case LAUNCHING:
+		c.checkFallingCondition();
+		c.updateTelem();
+		//c.saveTelem();
+		break;
+
+	case FALLING:
+		c.checkReleaseCondition();
+		c.updateTelem();
+		//c.saveTelem();
+		break;
+
+	case RELEASED:
+		/*
+		delay(1000);
+		c.transmitTelem(&xbee);
+		delay(1000);
+		c.transmitTelem(&xbee);
+		*/
+
+		while (c.lastTwoCount < 2);  //wait for last two packets to send
+
+		c.endMission();  //sounds buzzer and stop sending telemetry
+		break;
+	}
+
+	/*
 	if (c.state != LAND) {
 		c.createPacket();
 		//save here
 		//c.saveTelem();
 	}
-
+	*/
 	if (c.cmdFlag) {
-		c.processCommand(&xbee);
+		c.processCommand();
 		c.cmdFlag = false;
 	}
 
 
 	if (c.transmitFlag){
+		Serial.println(c.lux);
+		c.transmitTelem();
+		/*
 		c.packetCount++;
 	    xbee.println(c.packet);
 		c.saveEEPROMData();
+		*/
 	    c.transmitFlag = false;
 	}
 
@@ -92,6 +119,11 @@ void sendPacket() {
 
 	if (c.releasing) {
 		c.releaseCount++;
+	}
+
+	if (c.lastTwo && c.lastTwoCount < 2) {
+		c.lastTwoCount++;
+		c.transmitTelem();
 	}
 }
 

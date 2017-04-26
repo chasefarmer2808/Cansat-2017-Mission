@@ -1,9 +1,12 @@
 #include "Container.h"
 #include "Arduino.h"
 
-Container::Container() {  //constructor implementation
+Container::Container(SoftwareSerial* radio) {  //constructor implementation
+	xbee = radio;
+	xbee->begin(9600);
+	
 	bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
-
+	/*
 	//init attribute values
 	temperature = 0.0;
 	pressure = 0.0;
@@ -12,12 +15,48 @@ Container::Container() {  //constructor implementation
 	transmitFlag = false;
 	cmdFlag = false;
 	releasing = false;
+	lastTwo = false;
 	releaseCount = 0;
+	lastTwoCount = 0;
 
 	EEPROM_read(STATE_ADDR, state);
 	EEPROM_read(PACKET_ADDR, packetCount);
 	EEPROM_read(INITIALTIME_ADDR, initialTime);
+	*/
 
+	init();
+}
+
+void Container::init() {
+	
+	//this->bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
+
+	//init attribute values
+	this->setState(LAUNCHING);
+	this->temperature = 0.0;
+	this->pressure = 0.0;
+	this->lux = 0.0;
+	this->battVoltage = 0.0;
+	this->transmitFlag = false;
+	this->cmdFlag = false;
+	this->forceRelease = false;
+	this->releasing = false;
+	this->lastTwo = false;
+	this->releaseCount = 0;
+	this->lastTwoCount = 0;
+
+	EEPROM_read(STATE_ADDR, state);
+	EEPROM_read(PACKET_ADDR, packetCount);
+	EEPROM_read(INITIALTIME_ADDR, initialTime);
+}
+
+void Container::updateTelem() {
+	//gather latest sensor readings
+	this->setBMP180Data();
+	this->setLux();
+	this->setMissionTime();
+	this->setVoltage();
+	this->createPacket();
 }
 
 void Container::setBMP180Data() {
@@ -38,7 +77,7 @@ void Container::setLux() {
 }
 
 void Container::setMissionTime() {
-	if (this->initialTime == 0) {//!this->timeSet) {
+	if (this->initialTime == 0) {
 		this->initialTime = rtc.now().unixtime();
 	}
 
@@ -52,24 +91,31 @@ void Container::setVoltage() {
 	this->battVoltage = rawVoltage / VOLT_DIV_RATIO;
 }
 
-void Container::processCommand(SoftwareSerial* xbee) {
-	if (xbee->available()) {
-		this->command = xbee->read();
+void Container::processCommand() {
+	if (this->xbee->available()) {
+		this->command = this->xbee->read();
 	}
 
-	if (this->command == CMD_RELEASE && this->state == LAUNCH) {
-		this->release();
-		this->setState(RELEASE);
+	if (this->command == CMD_RELEASE && this->state == FALLING) {
+		this->forceRelease = true;
+		//this->release();
+		//this->setState(RELEASED);
 	}
 	else if (this->command == CMD_RESET) {
-		xbee->println("resetting data...");
+		this->xbee->println("resetting data...");
 		this->resetSaveData();
 	}
 	else if (this->command == CMD_BUZZER) {
-		this->buzz(3000, false);  //sound buzzer for specified amount of time
+		this->buzz(BUZZ_DUR, false);  //sound buzzer for specified amount of time
 	}
 	else if (this->command == CMD_LAND) {
 		this->endMission();  //set state for last time, stop timer interrupt, and sound buzzer
+	}
+	else if (this->command == CMD_NEXT_STATE) {
+		this->state++;
+	}
+	else if (this->command == CMD_PREV_STATE) {
+		this->state--;
 	}
 
 	this->command = NULL;  //band-aid for rx every second bug
@@ -79,21 +125,19 @@ void Container::release() {
 	this->releasing = true;  //set the counter flag to true
 
 	digitalWrite(this->releasePin, 1);  //turn on the Nichrome
-
+	
 	while (digitalRead(this->magnetPin)) {  //while the magnet is closed
 		if (this->releaseCount > RELEASE_TIME_LIMIT) {  //hold the nichrome on until the magnet opens 
 			break;										//or until a count limit is reached (seconds)
 		}
 	}
-
+	
 	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
 	this->releasing = false;  //stop counting
 	this->releaseCount = 0;  //reset counter for in-the-loop retesting (no MCU reset required)
-	this->state = 1;  //set state to released
 }
 
 void Container::createPacket() {
-
 	this->packet = String("3387,CONTAINER," +
 						   String(this->missionTime) +
 						    "," +
@@ -106,6 +150,13 @@ void Container::createPacket() {
 						   String(this->battVoltage) +
 						    "," +
 						   String(this->state));
+}
+
+void Container::transmitTelem() {
+	//this->xbee->println("here");
+	this->packetCount++;  //increment the packet count
+	this->xbee->println(this->packet);  //send the packet to GS
+	this->saveEEPROMData();  //save data to eeprom
 }
 
 void Container::setState(uint8_t val) {
@@ -137,20 +188,42 @@ void Container::resetSaveData() {
 	EEPROM_write(STATE_ADDR, this->state);
 	EEPROM_write(PACKET_ADDR, this->packetCount);
 	EEPROM_write(INITIALTIME_ADDR, this->initialTime);
+
+	this->init();
 }
 
 void Container::buzz(int dur, bool infinate) {  //dur in millis
-	if (infinate) {
+	if (infinate) {  //sound buzzer forever
 		tone(buzzPin, BUZZ_FREQ);
-		while (1);
+		while (1) {
+			if (this->cmdFlag) {
+				this->processCommand();
+				this->cmdFlag = false;
+			}
+		}
 	}
 
-	tone(buzzPin, BUZZ_FREQ, dur);
+	tone(buzzPin, BUZZ_FREQ, dur);  //sound buzzer for specified duration
+}
+
+void Container::checkFallingCondition() {
+	if (this->lux >= LIGHT_THRESH) {  //container ejected from rocket
+		this->setState(FALLING);  //container now falling by parachute
+	}
+}
+
+void Container::checkReleaseCondition() {
+	if (this->altitude <= RELEASE_ALT || this->forceRelease) {  //container has fallen to nominal release altitude
+		this->release();  //burn the nichrome to release the glider
+		this->setState(RELEASED);  //glider should be released and falling at this point
+		this->lastTwo = true;   //set this flag so only two more packets can get send
+		this->forceRelease = false;
+	}
 }
 
 void Container::endMission() {
-	this->setState(LAND);
-	Timer1.detachInterrupt();
-	this->buzz(0, true);
-	while (1);
+	this->setState(LANDED);
+	Timer1.stop();  //stop timer so no more interrupts occur
+	this->buzz(0, true);  //sound buzzer forever
+	while (1);  //this line will never get reached, but just in case
 }
