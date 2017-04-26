@@ -87,8 +87,6 @@
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
 
-//SoftwareSerial xbee(2, 3);
-
 class Container {
 public:
 	Container(SoftwareSerial* radio);  //constructor

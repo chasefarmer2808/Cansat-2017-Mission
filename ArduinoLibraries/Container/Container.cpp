@@ -6,31 +6,12 @@ Container::Container(SoftwareSerial* radio) {  //constructor implementation
 	xbee->begin(9600);
 	
 	bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
-	/*
-	//init attribute values
-	temperature = 0.0;
-	pressure = 0.0;
-	lux = 0.0;
-	battVoltage = 0.0;
-	transmitFlag = false;
-	cmdFlag = false;
-	releasing = false;
-	lastTwo = false;
-	releaseCount = 0;
-	lastTwoCount = 0;
-
-	EEPROM_read(STATE_ADDR, state);
-	EEPROM_read(PACKET_ADDR, packetCount);
-	EEPROM_read(INITIALTIME_ADDR, initialTime);
-	*/
 
 	init();
 }
 
 void Container::init() {
 	
-	//this->bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
-
 	//init attribute values
 	this->setState(LAUNCHING);
 	this->temperature = 0.0;
@@ -98,8 +79,6 @@ void Container::processCommand() {
 
 	if (this->command == CMD_RELEASE && this->state == FALLING) {
 		this->forceRelease = true;
-		//this->release();
-		//this->setState(RELEASED);
 	}
 	else if (this->command == CMD_RESET) {
 		this->xbee->println("resetting data...");
@@ -115,7 +94,9 @@ void Container::processCommand() {
 		this->state++;
 	}
 	else if (this->command == CMD_PREV_STATE) {
-		this->state--;
+		if (this->state >= 1) {  //only if not on first state
+			this->state--;
+		}
 	}
 
 	this->command = NULL;  //band-aid for rx every second bug
@@ -153,7 +134,6 @@ void Container::createPacket() {
 }
 
 void Container::transmitTelem() {
-	//this->xbee->println("here");
 	this->packetCount++;  //increment the packet count
 	this->xbee->println(this->packet);  //send the packet to GS
 	this->saveEEPROMData();  //save data to eeprom
@@ -195,12 +175,7 @@ void Container::resetSaveData() {
 void Container::buzz(int dur, bool infinate) {  //dur in millis
 	if (infinate) {  //sound buzzer forever
 		tone(buzzPin, BUZZ_FREQ);
-		while (1) {
-			if (this->cmdFlag) {
-				this->processCommand();
-				this->cmdFlag = false;
-			}
-		}
+		while (1);
 	}
 
 	tone(buzzPin, BUZZ_FREQ, dur);  //sound buzzer for specified duration
@@ -222,8 +197,8 @@ void Container::checkReleaseCondition() {
 }
 
 void Container::endMission() {
-	this->setState(LANDED);
-	Timer1.stop();  //stop timer so no more interrupts occur
+	this->saveEEPROMData();
+	Timer1.stop();  //stop timer so no more timer interrupts occur
 	this->buzz(0, true);  //sound buzzer forever
 	while (1);  //this line will never get reached, but just in case
 }

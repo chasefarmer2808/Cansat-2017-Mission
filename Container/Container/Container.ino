@@ -76,9 +76,15 @@ void loop() {
 		c.transmitTelem(&xbee);
 		*/
 
-		while (c.lastTwoCount < 2);  //wait for last two packets to send
-
-		c.endMission();  //sounds buzzer and stop sending telemetry
+		while (c.lastTwoCount < 2) {
+			Serial.println(c.lastTwoCount);
+		}
+		//wait for last two packets to send
+		c.setState(LANDED);
+		//c.endMission();  //sounds buzzer and stop sending telemetry
+		break;
+	case LANDED:
+		c.endMission();
 		break;
 	}
 
@@ -111,6 +117,14 @@ void loop() {
 //ISR for RX
 void processCommand() {
 	c.cmdFlag = true;
+	Serial.println("HERE");
+	Serial.println(c.state);
+	if (c.state == LANDED) {
+		Serial.println("here");
+
+		c.processCommand();
+		c.cmdFlag = false;
+	}
 }
 
 //ISR for transmitting telemetry
