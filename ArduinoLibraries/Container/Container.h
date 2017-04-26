@@ -77,12 +77,12 @@
 #define BUZZ_FREQ 262 //Hz
 #define BUZZ_DUR 5000 //millis
 
-#define TELEM_FILE "Flight_Data.txt"
-
 #define RELEASE_TIME_LIMIT 10  //seconds
 
 #define LIGHT_THRESH 1000 //lux
 #define RELEASE_ALT 420 //meters
+
+#define TELEM_FILE "Telem.csv"
 
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
@@ -115,7 +115,7 @@ public:
 	uint16_t packetCount;  //number of packets sent
 	String packet;  //holds the entire packet to be sent to GS
 	char command;  //holds command char recieved from GS
-	File flightData;  
+	File flightData;
 	void updateTelem();  //gather latest sensor readings
 	void setBMP180Data();  //sets temp and pressure attributes
 	void setLux();  //sets the lux attribute

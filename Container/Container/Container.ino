@@ -7,6 +7,9 @@
 // the setup function runs once when you press reset or power the board
 
 #include <Container.h>
+#include <SPI.h>
+#include <SD.h>
+
 
 //Container c = Container();
 
@@ -18,12 +21,14 @@ void setup() {
 	Serial.begin(9600);
 	//xbee.begin(9600);  //start the software serial port
 	analogReference(DEFAULT);  //reference range 0V - 5V
-	/*
+	
+	pinMode(10, OUTPUT);
+	
 	if (!SD.begin(10)) {
 		Serial.println("SD failed");
 		return;
 	}
-	*/
+	
 	if (!c.bmp.begin()) {
 		Serial.print("BMP failed");
 		while (1);
@@ -44,6 +49,8 @@ void setup() {
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
 	pinMode(c.magnetPin, INPUT);
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
+
+  SD.mkdir("/Conatiner");
 }
 
 // the loop function runs over and over again until power down or reset
@@ -102,7 +109,7 @@ void loop() {
 
 
 	if (c.transmitFlag){
-		Serial.println(c.lux);
+		c.saveTelem();
 		c.transmitTelem();
 		/*
 		c.packetCount++;

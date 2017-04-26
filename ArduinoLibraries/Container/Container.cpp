@@ -1,17 +1,19 @@
 #include "Container.h"
 #include "Arduino.h"
+#include "SPI.h"
+#include "SD.h"
 
 Container::Container(SoftwareSerial* radio) {  //constructor implementation
 	xbee = radio;
 	xbee->begin(9600);
-	
+
 	bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
 
 	init();
 }
 
 void Container::init() {
-	
+
 	//init attribute values
 	this->setState(LAUNCHING);
 	this->temperature = 0.0;
@@ -106,13 +108,13 @@ void Container::release() {
 	this->releasing = true;  //set the counter flag to true
 
 	digitalWrite(this->releasePin, 1);  //turn on the Nichrome
-	
+
 	while (digitalRead(this->magnetPin)) {  //while the magnet is closed
-		if (this->releaseCount > RELEASE_TIME_LIMIT) {  //hold the nichrome on until the magnet opens 
+		if (this->releaseCount > RELEASE_TIME_LIMIT) {  //hold the nichrome on until the magnet opens
 			break;										//or until a count limit is reached (seconds)
 		}
 	}
-	
+
 	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
 	this->releasing = false;  //stop counting
 	this->releaseCount = 0;  //reset counter for in-the-loop retesting (no MCU reset required)
@@ -150,14 +152,15 @@ void Container::saveEEPROMData() {
 }
 
 void Container::saveTelem() {
-	this->flightData = SD.open("Flight_Data.txt", FILE_WRITE);
-
+	this->flightData = SD.open(TELEM_FILE, FILE_WRITE);
+	Serial.print("Telem.txt Opened: ");
+	Serial.println(this->flightData);
 	if (this->flightData) {
 		Serial.println("saving");
 		this->flightData.println(this->packet);
 		this->flightData.close();
 	}
-	
+
 }
 
 void Container::resetSaveData() {
