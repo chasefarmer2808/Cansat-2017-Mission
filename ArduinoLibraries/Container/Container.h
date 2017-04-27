@@ -78,6 +78,7 @@
 #define BUZZ_DUR 5000 //millis
 
 #define RELEASE_TIME_LIMIT 10  //seconds
+#define EMERGENCY_BUZZER_TIME_LIMIT 60//seconds
 
 #define LIGHT_THRESH 1000 //lux
 #define RELEASE_ALT 420 //meters
@@ -107,6 +108,7 @@ public:
 	uint8_t state;  //launching(0), released(1), landed(2)
 	uint8_t releaseCount;  //holds the seconds the nichrome has been on
 	uint8_t lastTwoCount;  //holds the seconds for the last two data packets
+	uint16_t emergencyCount;
 	int lightPin = A0;  //analog input pin for the light sensor
 	int battPin = A1;  //analog pin for voltage divider input
 	int magnetPin = 6;  //digital pin 6

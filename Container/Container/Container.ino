@@ -7,11 +7,6 @@
 // the setup function runs once when you press reset or power the board
 
 #include <Container.h>
-#include <SPI.h>
-#include <SD.h>
-
-
-//Container c = Container();
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
@@ -19,9 +14,8 @@ Container c = Container(&xbee);
 
 void setup() { 
 	Serial.begin(9600);
-	//xbee.begin(9600);  //start the software serial port
 	analogReference(DEFAULT);  //reference range 0V - 5V
-	
+	 
 	pinMode(10, OUTPUT);
 	
 	if (!SD.begin(10)) {
@@ -50,58 +44,36 @@ void setup() {
 	pinMode(c.magnetPin, INPUT);
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
 
-  SD.mkdir("/Conatiner");
+	SD.mkdir("/Conatiner");
 }
 
 // the loop function runs over and over again until power down or reset
 void loop() { 
-	/*
-	c.setBMP180Data(); 
-	c.setLux();
-	c.setMissionTime();
-	c.setVoltage();
-	*/
 
 	switch (c.state) {
 	case LAUNCHING:
 		c.checkFallingCondition();
 		c.updateTelem();
-		//c.saveTelem();
 		break;
 
 	case FALLING:
 		c.checkReleaseCondition();
 		c.updateTelem();
-		//c.saveTelem();
 		break;
 
 	case RELEASED:
-		/*
-		delay(1000);
-		c.transmitTelem(&xbee);
-		delay(1000);
-		c.transmitTelem(&xbee);
-		*/
 
 		while (c.lastTwoCount < 2) {
 			Serial.println(c.lastTwoCount);
 		}
 		//wait for last two packets to send
 		c.setState(LANDED);
-		//c.endMission();  //sounds buzzer and stop sending telemetry
 		break;
 	case LANDED:
 		c.endMission();
 		break;
 	}
 
-	/*
-	if (c.state != LAND) {
-		c.createPacket();
-		//save here
-		//c.saveTelem();
-	}
-	*/
 	if (c.cmdFlag) {
 		c.processCommand();
 		c.cmdFlag = false;
@@ -109,14 +81,14 @@ void loop() {
 
 
 	if (c.transmitFlag){
+		c.createPacket();
 		c.saveTelem();
 		c.transmitTelem();
-		/*
-		c.packetCount++;
-	    xbee.println(c.packet);
-		c.saveEEPROMData();
-		*/
 	    c.transmitFlag = false;
+	}
+
+	if (c.emergencyCount > EMERGENCY_BUZZER_TIME_LIMIT) {
+		c.setState(LANDED);
 	}
 
 }
@@ -124,11 +96,8 @@ void loop() {
 //ISR for RX
 void processCommand() {
 	c.cmdFlag = true;
-	Serial.println("HERE");
-	Serial.println(c.state);
-	if (c.state == LANDED) {
-		Serial.println("here");
 
+	if (c.state == LANDED) {
 		c.processCommand();
 		c.cmdFlag = false;
 	}
@@ -136,6 +105,7 @@ void processCommand() {
 
 //ISR for transmitting telemetry
 void sendPacket() {
+	c.emergencyCount++;
 	c.transmitFlag = true;
 
 	if (c.releasing) {

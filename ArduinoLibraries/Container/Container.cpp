@@ -1,7 +1,5 @@
 #include "Container.h"
 #include "Arduino.h"
-#include "SPI.h"
-#include "SD.h"
 
 Container::Container(SoftwareSerial* radio) {  //constructor implementation
 	xbee = radio;
@@ -27,6 +25,7 @@ void Container::init() {
 	this->lastTwo = false;
 	this->releaseCount = 0;
 	this->lastTwoCount = 0;
+	this->emergencyCount = 0;
 
 	EEPROM_read(STATE_ADDR, state);
 	EEPROM_read(PACKET_ADDR, packetCount);
@@ -39,7 +38,6 @@ void Container::updateTelem() {
 	this->setLux();
 	this->setMissionTime();
 	this->setVoltage();
-	this->createPacket();
 }
 
 void Container::setBMP180Data() {
@@ -84,6 +82,7 @@ void Container::processCommand() {
 	}
 	else if (this->command == CMD_RESET) {
 		this->xbee->println("resetting data...");
+		this->emergencyCount = 0;
 		this->resetSaveData();
 	}
 	else if (this->command == CMD_BUZZER) {
@@ -153,10 +152,7 @@ void Container::saveEEPROMData() {
 
 void Container::saveTelem() {
 	this->flightData = SD.open(TELEM_FILE, FILE_WRITE);
-	Serial.print("Telem.txt Opened: ");
-	Serial.println(this->flightData);
 	if (this->flightData) {
-		Serial.println("saving");
 		this->flightData.println(this->packet);
 		this->flightData.close();
 	}
