@@ -52,7 +52,7 @@ void loop() {
 
 	switch (c.state) {
 	case LAUNCHING:
-		c.checkFallingCondition();
+		//c.checkFallingCondition();
 		c.updateTelem();
 		break;
 
@@ -81,6 +81,8 @@ void loop() {
 
 
 	if (c.transmitFlag){
+		c.xbee->print("LUX: ");
+		c.xbee->println(c.lux);
 		c.createPacket();
 		c.saveTelem();
 		c.transmitTelem();
