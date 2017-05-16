@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 Container::Container(SoftwareSerial* radio) {  //constructor implementation
-	xbee = radio;
+	xbee = radio;  //initialize the radio
 	xbee->begin(9600);
 
 	bmp = Adafruit_BMP085_Unified(10085);  //initialize the bmp library object
@@ -27,6 +27,7 @@ void Container::init() {
 	this->lastTwoCount = 0;
 	this->emergencyCount = 0;
 
+	//init by reading from EEPROM
 	EEPROM_read(STATE_ADDR, state);
 	EEPROM_read(PACKET_ADDR, packetCount);
 	EEPROM_read(INITIALTIME_ADDR, initialTime);
@@ -42,12 +43,12 @@ void Container::updateTelem() {
 
 void Container::setBMP180Data() {
 	sensors_event_t event;  //initialize an event
-	bmp.getEvent(&event);  //do an read
+	bmp.getEvent(&event);  //do a read
 
 	if (event.pressure) {
 		this->pressure = event.pressure;  //save the pressure
 		bmp.getTemperature(&this->temperature);  //save the temperature
-		this->altitude = bmp.pressureToAltitude(SENSORS_PRESSURE_SEALEVELHPA, event.pressure);
+		this->altitude = bmp.pressureToAltitude(1009, event.pressure);
 	}
 }
 
@@ -58,12 +59,12 @@ void Container::setLux() {
 }
 
 void Container::setMissionTime() {
-	if (this->initialTime == 0) {
-		this->initialTime = rtc.now().unixtime();
+	if (this->initialTime == 0) {  //if initial time has not been set
+		this->initialTime = rtc.now().unixtime();  //set it to current time
 	}
 
-	DateTime currentTime = rtc.now();
-	this->missionTime = currentTime.unixtime() - this->initialTime;
+	DateTime currentTime = rtc.now();  //get the current time
+	this->missionTime = currentTime.unixtime() - this->initialTime;  
 }
 
 void Container::setVoltage() {
@@ -125,11 +126,11 @@ void Container::createPacket() {
 						    "," +
 						   String(this->packetCount) +
 							"," +
-						   String(this->altitude) +
+						   String(this->altitude, DECIMAL_PLACES) +
 						    "," +
-						   String(this->temperature) +
+						   String(this->temperature, DECIMAL_PLACES) +
 							"," +
-						   String(this->battVoltage) +
+						   String(this->battVoltage, DECIMAL_PLACES) +
 						    "," +
 						   String(this->state));
 }

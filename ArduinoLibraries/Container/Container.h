@@ -56,34 +56,36 @@
 
 #define R1 1000.0  //voltage divider R1 value in ohms
 #define R2 1330.0   //R2 value in ohms
-#define VOLT_DIV_RATIO (R2 / (R1 + R2))
+#define VOLT_DIV_RATIO (R2 / (R1 + R2))  //voltage divider result for battery voltage input
 
-#define LAUNCHING 0  //first state is 255 b/c all values in EEPROM are stored as 255
-#define FALLING 1
-#define RELEASED 2
-#define LANDED 3
+#define LAUNCHING 0  //flying up in the rocket
+#define FALLING 1    //released from the rocket
+#define RELEASED 2   //glider has been released
+#define LANDED 3     //container on the ground
 
-#define STATE_ADDR 0
-#define PACKET_ADDR 1
-#define INITIALTIME_ADDR 3
+#define STATE_ADDR 0  //index in EEPROM of state value
+#define PACKET_ADDR 1  //index in EEPROM of packet count value
+#define INITIALTIME_ADDR 3  //index in EEPROM of initial time value
 
-#define CMD_RELEASE 'r'
-#define CMD_BUZZER 'b'
-#define CMD_RESET 'z'
-#define CMD_LAND 'l'
-#define CMD_NEXT_STATE 'n'
-#define CMD_PREV_STATE 'p'
+#define CMD_RELEASE 'r'  //when in falling state, forces a call to the release() function
+#define CMD_BUZZER 'b'  //sounds buzzer for 3 seconds
+#define CMD_RESET 'z'  //zeros out mission time, packet count, and state
+#define CMD_LAND 'l'  //forces a call to endMission() function
+#define CMD_NEXT_STATE 'n'  //increments the state
+#define CMD_PREV_STATE 'p'  //decrements the state
 
 #define BUZZ_FREQ 262 //Hz
 #define BUZZ_DUR 5000 //millis
 
 #define RELEASE_TIME_LIMIT 10  //seconds
-#define EMERGENCY_BUZZER_TIME_LIMIT 60//seconds
+#define EMERGENCY_BUZZER_TIME_LIMIT 250//seconds
 
 #define LIGHT_THRESH 1000 //lux
 #define RELEASE_ALT 420 //meters
 
-#define TELEM_FILE "Telem.csv"
+#define TELEM_FILE "Telem.csv"  //name of file on sd card to save telemetry to
+
+#define DECIMAL_PLACES 2  //number of digits after decimal for floating point numbers
 
 const byte RX = 2;  //Software serial RX pin for xbee (digital pin 2)
 const byte TX = 3;  //Software serial TX pin for xbee (digital pin 3)
