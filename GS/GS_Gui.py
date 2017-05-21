@@ -10,7 +10,11 @@ CMD_LAND = 'l'
 
 CSV_FILE_NAME = 'telemetry.csv'
 
-xbee = serial.Serial('COM3', timeout=0.1)  #initialize a serial object on the com port
+"""
+try:
+    xbee = serial.Serial('COM3', timeout=0.1)  #initialize a serial object on the com port
+except:
+    pass
 
 #function read_packet()
 '''
@@ -23,7 +27,7 @@ def read_packet():
     if packet: #if any chars were read
         print(packet)
         write_csv(packet)  #save telemetry packet to csv
-
+"""
 
 def write_csv(packet):
     with open(CSV_FILE_NAME, 'ab') as csvfile:
