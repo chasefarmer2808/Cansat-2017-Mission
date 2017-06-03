@@ -43,8 +43,17 @@ void loop() {
   float sideTemp = getCelcius(tmp1);
   float bottomTemp = getCelcius(tmp2);
 
+  Serial.print("Side: ");
+  Serial.print(sideTemp);
+  Serial.print("\n");
+  Serial.print("Bottom: ");
+  Serial.print(bottomTemp);
+  Serial.print("\n");
+
   setSideLEDS(sideTemp);
   setBottomLEDS(bottomTemp);  
+
+  delay(1000); 
 }
 
 float getCelcius(int sensorAddr) {
