@@ -101,7 +101,7 @@ bool ContainerFunctionalityTest::testRelease(int nicrPin, int magPin, uint8_t se
 		}
 	}
 
-	digitalWrite(this->releasePin, 0);  //turn off the Nichrome
+	digitalWrite(nicrPin, 0);  //turn off the Nichrome
 	this->releasing = false;  //stop counting
 	this->releaseCount = 0;  //reset counter for in-the-loop retesting (no MCU reset required)
 	return true;
