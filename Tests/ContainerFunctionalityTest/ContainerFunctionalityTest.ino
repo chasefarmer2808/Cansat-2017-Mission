@@ -28,12 +28,13 @@ SoftwareSerial xbee(XBEE_SS_RX, XBEE_SS_RX);
 // the setup function runs once when you press reset or power the board
 void setup() {
 	xbee.begin(BAUD);
-	xbee.println("Setting up test environment...");
+	Serial.begin(BAUD);
+	logln("Setting up test environment...");
 	analogReference(DEFAULT);
 	Timer1.initialize();  //set up 1 Hz timer to count seconds
 	Timer1.attachInterrupt(secondCount);
 
-	xbee.println("Finding SD card module...");
+	logln("Finding SD card module...");
 	pinMode(SD_PIN, OUTPUT);
 	pinMode(LIGHT_PIN, INPUT);
 	pinMode(BATT_PIN, INPUT);
@@ -155,11 +156,13 @@ void loop() {
 void log(String s) {
 	xbee.print(s);
 	test.log.print(s);
+	Serial.print(s);
 }
 
 void logln(String s) {
 	xbee.println(s);
 	test.log.println(s);
+	Serial.println(s);
 }
 
 void secondCount() {
