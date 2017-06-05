@@ -7,7 +7,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP085_U.h>
 #include <RTClib.h>
-#include <TimerOne.h>
+//#include <TimerOne.h>
 #include <EEPROM.h>
 #include "Arduino.h"
 

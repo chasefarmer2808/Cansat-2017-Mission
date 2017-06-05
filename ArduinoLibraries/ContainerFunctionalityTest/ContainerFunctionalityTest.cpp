@@ -95,12 +95,15 @@ bool ContainerFunctionalityTest::testRelease(int nicrPin, int magPin, uint8_t se
 
 	digitalWrite(nicrPin, 1);  //turn on the Nichrome
 
-	while (digitalRead(magPin)) {  //while the magnet is closed
+	delay(1000 * seconds);
+
+	/*
+	while (true) {  //while the magnet is closed
 		if (this->releaseCount > seconds) {  //hold the nichrome on until the magnet opens
 			break;										//or until a count limit is reached (seconds)
 		}
 	}
-
+	*/
 	digitalWrite(nicrPin, 0);  //turn off the Nichrome
 	this->releasing = false;  //stop counting
 	this->releaseCount = 0;  //reset counter for in-the-loop retesting (no MCU reset required)

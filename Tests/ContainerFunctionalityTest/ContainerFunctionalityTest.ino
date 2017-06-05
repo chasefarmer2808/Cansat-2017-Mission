@@ -27,17 +27,26 @@ SoftwareSerial xbee(XBEE_SS_RX, XBEE_SS_RX);
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-	xbee.begin(BAUD);
-	Serial.begin(BAUD);
-	logln("Setting up test environment...");
-	analogReference(DEFAULT);
-	Timer1.initialize();  //set up 1 Hz timer to count seconds
-	Timer1.attachInterrupt(secondCount);
-
-	logln("Finding SD card module...");
+	pinMode(RELEASE_PIN, OUTPUT);
 	pinMode(SD_PIN, OUTPUT);
 	pinMode(LIGHT_PIN, INPUT);
 	pinMode(BATT_PIN, INPUT);
+	digitalWrite(RELEASE_PIN, 0);
+
+	xbee.begin(BAUD);
+	Serial.begin(BAUD);
+
+	while (!xbee.available()) {
+		xbee.println("Send a char to continue...");
+	}
+
+	logln("Setting up test environment...");
+	analogReference(DEFAULT);
+	//Timer1.initialize();  //set up 1 Hz timer to count seconds
+	//Timer1.attachInterrupt(secondCount);
+
+	logln("Finding SD card module...");
+	
 
 	if (!SD.begin(SD_PIN)) {
 		xbee.println("SD failed");
@@ -82,7 +91,7 @@ void setup() {
 
 	logln("Send any char acters to start tests...");
 	while (!xbee.available());  //wait for char to be recieved.
-	logln((String("Recieved ") + String(xbee.read()) + String(".  Starting test...")));
+	xbee.println((String("Recieved ") + String(xbee.read()) + String(".  Starting test...")));
 
 	test.startTime = test.rtc.now().unixtime();
 
@@ -145,7 +154,7 @@ void setup() {
 
 	logln("All tests complete.");
 	logln("Results:");
-	logln(test.testResults);
+	xbee.println(test.testResults);
 }
 
 // the loop function runs over and over again until power down or reset
@@ -153,13 +162,13 @@ void loop() {
   
 }
 
-void log(String s) {
+void log(char* s) {
 	xbee.print(s);
 	test.log.print(s);
 	Serial.print(s);
 }
 
-void logln(String s) {
+void logln(char* s) {
 	xbee.println(s);
 	test.log.println(s);
 	Serial.println(s);
