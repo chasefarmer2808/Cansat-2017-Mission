@@ -10,19 +10,22 @@
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
-Container c = Container(&xbee);
+Container c = Container(&xbee);  //instantiate a container
 
 void setup() { 
+	pinMode(c.releasePin, OUTPUT);
+	digitalWrite(c.releasePin, 0);
+
 	Serial.begin(9600);
 	analogReference(DEFAULT);  //reference range 0V - 5V
-	 
+	/* 
 	pinMode(10, OUTPUT);
 	
 	if (!SD.begin(10)) {
 		Serial.println("SD failed");
 		return;
 	}
-	
+	*/
 	if (!c.bmp.begin()) {
 		Serial.print("BMP failed");
 		while (1);
@@ -37,14 +40,14 @@ void setup() {
 		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  //initialize the time
 	}
 
-	Timer1.initialize();
+	Timer1.initialize();  //Timer1 will be used to send a packet every second
 	Timer1.attachInterrupt(sendPacket); //Interrupt using a timer to send a packet every second
 	pinMode(c.battPin, INPUT);  //set the voltage input
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
 	pinMode(c.magnetPin, INPUT);
 	attachInterrupt(digitalPinToInterrupt(RX), processCommand, RISING);  //initialize an interrupt for D2
 
-	SD.mkdir("/Conatiner");
+	//SD.mkdir("/Conatiner");
 }
 
 // the loop function runs over and over again until power down or reset
@@ -52,7 +55,7 @@ void loop() {
 
 	switch (c.state) {
 	case LAUNCHING:
-		//c.checkFallingCondition();
+		c.checkFallingCondition();
 		c.updateTelem();
 		break;
 
