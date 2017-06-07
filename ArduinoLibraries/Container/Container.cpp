@@ -1,6 +1,8 @@
 #include "Container.h"
 #include "Arduino.h"
 
+void(*resetFunc)(void) = 0;
+
 Container::Container(SoftwareSerial* radio) {  //constructor implementation
 	xbee = radio;  //initialize the radio
 	xbee->begin(9600);
@@ -85,6 +87,7 @@ void Container::processCommand() {
 		this->xbee->println("resetting data...");
 		this->emergencyCount = 0;
 		this->resetSaveData();
+		resetFunc();
 	}
 	else if (this->command == CMD_BUZZER) {
 		this->buzz(BUZZ_DUR, false);  //sound buzzer for specified amount of time
@@ -152,12 +155,13 @@ void Container::saveEEPROMData() {
 }
 
 void Container::saveTelem() {
+	/*
 	this->flightData = SD.open(TELEM_FILE, FILE_WRITE);
 	if (this->flightData) {
 		this->flightData.println(this->packet);
 		this->flightData.close();
 	}
-
+	*/
 }
 
 void Container::resetSaveData() {

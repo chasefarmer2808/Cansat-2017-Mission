@@ -38,13 +38,14 @@ void setup() {
 
 	while (!xbee.available()) {
 		xbee.println("Send a char to continue...");
+		delay(1000);
 	}
 
 	logln("Setting up test environment...");
 	analogReference(DEFAULT);
 	//Timer1.initialize();  //set up 1 Hz timer to count seconds
 	//Timer1.attachInterrupt(secondCount);
-
+	/*
 	logln("Finding SD card module...");
 	
 
@@ -54,13 +55,13 @@ void setup() {
 	}
 
 	SD.mkdir("/ContainerTest");
-
+	
 	if (SD.exists(TEST_OUTPUT_FILENAME)) {  //make a new test result file
 		SD.remove(TEST_OUTPUT_FILENAME);
 	}
 
 	test.log = SD.open(TEST_OUTPUT_FILENAME, FILE_WRITE);
-	 
+	 */
 	log("Initializing RTC...");
 	if (!test.initRTC()) {
 		xbee.println("RTC init FAILED");
@@ -164,13 +165,13 @@ void loop() {
 
 void log(char* s) {
 	xbee.print(s);
-	test.log.print(s);
+	//test.log.print(s);
 	Serial.print(s);
 }
 
 void logln(char* s) {
 	xbee.println(s);
-	test.log.println(s);
+	//test.log.println(s);
 	Serial.println(s);
 }
 

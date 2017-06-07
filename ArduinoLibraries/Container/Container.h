@@ -41,7 +41,7 @@
 #define Container_h
 
 #include <Wire.h>
-#include <SD.h>
+//#include <SD.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
@@ -80,8 +80,8 @@
 #define RELEASE_TIME_LIMIT 10  //seconds
 #define EMERGENCY_BUZZER_TIME_LIMIT 250//seconds
 
-#define LIGHT_THRESH 1000 //lux
-#define RELEASE_ALT 420 //meters
+#define LIGHT_THRESH 60 //lux
+#define RELEASE_ALT 300 //meters
 
 #define TELEM_FILE "Telem.csv"  //name of file on sd card to save telemetry to
 
@@ -119,7 +119,7 @@ public:
 	uint16_t packetCount;  //number of packets sent
 	String packet;  //holds the entire packet to be sent to GS
 	char command;  //holds command char recieved from GS
-	File flightData;
+	//File flightData;
 	void updateTelem();  //gather latest sensor readings
 	void setBMP180Data();  //sets temp and pressure attributes
 	void setLux();  //sets the lux attribute

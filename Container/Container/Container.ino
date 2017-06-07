@@ -10,7 +10,7 @@
 
 SoftwareSerial xbee(2, 3);  //software serial port for the xbee
 
-Container c = Container(&xbee);  //instantiate a container
+Container c = Container(&xbee);
 
 void setup() { 
 	Serial.begin(9600);
@@ -37,7 +37,7 @@ void setup() {
 		c.rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  //initialize the time
 	}
 
-	Timer1.initialize();  //Timer1 will be used to send a packet every second
+	Timer1.initialize();
 	Timer1.attachInterrupt(sendPacket); //Interrupt using a timer to send a packet every second
 	pinMode(c.battPin, INPUT);  //set the voltage input
 	pinMode(c.releasePin, OUTPUT);  //set the digital output of the release pin
@@ -52,7 +52,7 @@ void loop() {
 
 	switch (c.state) {
 	case LAUNCHING:
-		c.checkFallingCondition();
+		//c.checkFallingCondition();
 		c.updateTelem();
 		break;
 
